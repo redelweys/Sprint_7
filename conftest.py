@@ -2,7 +2,6 @@ import pytest
 import requests
 
 from data import Urls
-from helpers import generate_courier_data
 from helpers import generate_courier_data, generate_order_data
 
 
