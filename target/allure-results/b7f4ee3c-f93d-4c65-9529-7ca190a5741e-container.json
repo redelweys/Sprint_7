@@ -1,1 +1,0 @@
-{"uuid": "dbeea0c4-aaa2-4e28-9988-eb2b2cfebbe3", "children": ["dacbc191-ddc9-42ff-aa10-29559880336c"], "befores": [{"name": "registered_courier", "status": "passed", "start": 1794148089363, "stop": 1794148089803}], "afters": [{"name": "registered_courier::<lambda>", "start": 1794148090217}], "start": 1794148089363, "stop": 1794148090217}

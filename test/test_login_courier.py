@@ -1,8 +1,8 @@
 import allure
-import requests
+import api
+from data import Messages
 import pytest
 
-from data import Urls
 from helpers import generate_courier_data
 
 
@@ -10,9 +10,7 @@ class TestLoginCourier:
 
     @allure.title('Зарегистрированный курьер может войти и получить свой id')
     def test_login_courier_success(self, registered_courier):
-        response = requests.post(
-            Urls.COURIER_LOGIN, json=registered_courier, timeout=10
-        )
+        response = api.login_courier(registered_courier)
 
         assert response.status_code == 200, response.text
         assert type(response.json()['id']) is int
@@ -23,10 +21,10 @@ class TestLoginCourier:
         credentials = registered_courier.copy()
         credentials[wrong_field] += 'x'
 
-        response = requests.post(Urls.COURIER_LOGIN, json=credentials, timeout=10)
+        response = api.login_courier(credentials)
 
         assert response.status_code == 404, response.text
-        assert response.json()['message'] == 'Учетная запись не найдена'
+        assert response.json()['message'] == Messages.ACCOUNT_NOT_FOUND
 
     @allure.title('Нельзя войти без поля {missing_field}')
     @pytest.mark.parametrize('missing_field', ['login', 'password'])
@@ -34,10 +32,10 @@ class TestLoginCourier:
         credentials = registered_courier.copy()
         del credentials[missing_field]
 
-        response = requests.post(Urls.COURIER_LOGIN, json=credentials, timeout=10)
+        response = api.login_courier(credentials)
 
         assert response.status_code == 400, response.text
-        assert response.json()['message'] == 'Недостаточно данных для входа'
+        assert response.json()['message'] == Messages.MISSING_LOGIN_DATA
 
     @allure.title('Незарегистрированный курьер не может войти')
     def test_login_unregistered_courier(self):
@@ -47,7 +45,7 @@ class TestLoginCourier:
             'password': data['password']
         }
 
-        response = requests.post(Urls.COURIER_LOGIN, json=credentials, timeout=10)
+        response = api.login_courier(credentials)
 
         assert response.status_code == 404, response.text
-        assert response.json()['message'] == 'Учетная запись не найдена'
+        assert response.json()['message'] == Messages.ACCOUNT_NOT_FOUND

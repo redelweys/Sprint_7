@@ -1,8 +1,7 @@
 import pytest
-import requests
+import api
 
-from data import Urls
-from helpers import generate_courier_data, generate_order_data
+from helpers import generate_courier_data
 
 
 @pytest.fixture
@@ -14,18 +13,18 @@ def courier_data():
         'login': payload['login'],
         'password': payload['password']
     }
-    login_response = requests.post(Urls.COURIER_LOGIN, json=credentials, timeout=10)
+    login_response = api.login_courier(credentials)
 
     if login_response.status_code != 404:
         login_response.raise_for_status()
         courier_id = login_response.json()['id']
-        delete_response = requests.delete(f'{Urls.COURIER}/{courier_id}', timeout=10)
+        delete_response = api.delete_courier(courier_id)
         delete_response.raise_for_status()
 
 @pytest.fixture
 def registered_courier(courier_data):
-    response = requests.post(Urls.COURIER, json=courier_data, timeout=10)
-    assert response.status_code == 201, response.text
+    response = api.create_courier(courier_data)
+    response.raise_for_status()
 
     return {
         'login': courier_data['login'],
@@ -33,16 +32,11 @@ def registered_courier(courier_data):
     }
 
 @pytest.fixture
-def order_response(colors):
-    payload = generate_order_data(colors)
-    response = requests.post(Urls.ORDERS, json=payload, timeout=10)
-    yield response
-
-    if response.status_code == 201:
-        track = response.json().get('track')
-        if type(track) is int:
-            cancel_response = requests.put(
-                Urls.CANCEL_ORDER, params={'track': track}, timeout=10
-            )
-            assert cancel_response.status_code == 200, cancel_response.text
-            assert cancel_response.json() == {'ok': True}
+def orders_to_cancel():
+    responses = []
+    yield responses
+    for response in responses:
+        if response.status_code == 201:
+            track = response.json().get('track')
+            if type(track) is int:
+                api.cancel_order(track).raise_for_status()
